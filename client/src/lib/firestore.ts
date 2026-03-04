@@ -80,7 +80,17 @@ export async function saveBuktiFisik(id: string, tahunKe: number, buktiFisik: Re
 
 export async function getAllUsers(): Promise<User[]> {
   const snap = await getDocs(collection(db, 'users'));
-  return snap.docs.map((d) => ({ uid: d.id, ...d.data() } as User));
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      uid: d.id,
+      email: data.email ?? '',
+      displayName: data.displayName ?? '',
+      role: data.role ?? 'operator',
+      npsn: data.npsn ?? '',
+      kanwil: data.kanwil ?? '',
+    } as User;
+  });
 }
 
 export async function getUserById(uid: string): Promise<User | null> {
