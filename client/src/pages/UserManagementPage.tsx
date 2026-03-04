@@ -52,8 +52,13 @@ export default function UserManagementPage() {
   useEffect(() => { load(); }, []);
 
   const filtered = users.filter((u) => {
+    if (!search) return true;
     const s = search.toLowerCase();
-    return !s || u.email.toLowerCase().includes(s) || (u.displayName ?? '').toLowerCase().includes(s) || (u.npsn ?? '').includes(s);
+    return (
+      (u.email ?? '').toLowerCase().includes(s) ||
+      (u.displayName ?? '').toLowerCase().includes(s) ||
+      (u.npsn ?? '').toLowerCase().includes(s)
+    );
   });
 
   const handleAdd = async () => {
@@ -152,11 +157,11 @@ export default function UserManagementPage() {
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 text-xs font-bold flex-shrink-0">
-                          {(u.displayName ?? u.email)[0].toUpperCase()}
+                          {((u.displayName ?? u.email) ?? '?')[0].toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-800">{u.displayName ?? '—'}</p>
-                          <p className="text-xs text-slate-400">{u.email}</p>
+                          <p className="font-medium text-slate-800">{u.displayName ?? '(tanpa nama)'}</p>
+                          <p className="text-xs text-slate-400">{u.email ?? '(tanpa email)'}</p>
                         </div>
                       </div>
                     </td>
