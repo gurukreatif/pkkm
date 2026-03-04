@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPenilaianById } from '../lib/firestore';
+import { useAuth } from '../hooks/useAuth';
+import { can } from '../lib/rbac';
 import type { PenilaianKepala } from '../types';
 import { hitungPredikat } from '../types';
 import {
@@ -44,6 +46,7 @@ export default function PenilaianDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [p, setP] = useState<PenilaianKepala | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!id) return;
@@ -100,10 +103,11 @@ export default function PenilaianDetailPage() {
           <Link to={`/print/${id}`} target="_blank" className="p-2 text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg" title="Cetak">
             <Printer className="w-4 h-4" />
           </Link>
-          <Link to={`/penilaian/${id}/edit`} className="flex items-center gap-2 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">
-            <Pencil className="w-3.5 h-3.5" />
-            Edit
-          </Link>
+          {can.editPenilaian(user?.role ?? 'operator') && (
+            <Link to={`/penilaian/${id}/edit`} className="flex items-center gap-2 px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">
+              <Pencil className="w-3.5 h-3.5" />Edit
+            </Link>
+          )}
         </div>
       </div>
 
@@ -203,22 +207,20 @@ export default function PenilaianDetailPage() {
                         </div>
                       ))}
                     </div>
-                    <Link
-                      to={`/penilaian/${id}/instrumen/${t}`}
-                      className="mt-3 block text-center text-xs text-emerald-600 hover:text-emerald-800 font-medium"
-                    >
-                      Edit Instrumen
-                    </Link>
+                    {can.inputSkor(user?.role ?? 'operator') && (
+                      <Link to={`/penilaian/${id}/instrumen/${t}`} className="mt-3 block text-center text-xs text-emerald-600 hover:text-emerald-800 font-medium">
+                        Edit Instrumen
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <div className="text-center mt-4">
                     <p className="text-slate-400 text-xs mb-3">Belum dinilai</p>
-                    <Link
-                      to={`/penilaian/${id}/instrumen/${t}`}
-                      className="text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium transition-colors"
-                    >
-                      Mulai Penilaian
-                    </Link>
+                    {can.inputSkor(user?.role ?? 'operator') && (
+                      <Link to={`/penilaian/${id}/instrumen/${t}`} className="text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium transition-colors">
+                        Mulai Penilaian
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>

@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllPenilaian } from '../lib/firestore';
+import { useAuth } from '../hooks/useAuth';
+import { can } from '../lib/rbac';
 import type { PenilaianKepala } from '../types';
 import { hitungPredikat } from '../types';
 import {
@@ -38,10 +40,11 @@ const PREDIKAT_COLOR: Record<string, string> = {
 export default function DashboardPage() {
   const [data, setData] = useState<PenilaianKepala[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    getAllPenilaian().then(setData).finally(() => setLoading(false));
-  }, []);
+    getAllPenilaian(user).then(setData).finally(() => setLoading(false));
+  }, [user]);
 
   // Stats
   const total = data.length;

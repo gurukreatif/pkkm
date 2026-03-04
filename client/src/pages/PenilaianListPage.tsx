@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllPenilaian, deletePenilaian } from '../lib/firestore';
+import { useAuth } from '../hooks/useAuth';
+import { can } from '../lib/rbac';
 import type { PenilaianKepala } from '../types';
 import { hitungPredikat } from '../types';
 import { Search, Plus, Eye, Trash2, Pencil, Printer, ChevronDown } from 'lucide-react';
@@ -22,10 +24,11 @@ export default function PenilaianListPage() {
   const [search, setSearch] = useState('');
   const [filterTahun, setFilterTahun] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const load = () => {
     setLoading(true);
-    getAllPenilaian().then((d) => {
+    getAllPenilaian(user).then((d) => {
       setData(d);
       setFiltered(d);
     }).finally(() => setLoading(false));
@@ -68,13 +71,11 @@ export default function PenilaianListPage() {
           <h1 className="text-xl font-bold text-slate-800">Data Penilaian</h1>
           <p className="text-slate-500 text-sm">{filtered.length} dari {data.length} data</p>
         </div>
-        <Link
-          to="/penilaian/baru"
-          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah
-        </Link>
+        {can.createPenilaian(user?.role ?? 'operator') && (
+          <Link to="/penilaian/baru" className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" />Tambah
+          </Link>
+        )}
       </div>
 
       {/* Filters */}

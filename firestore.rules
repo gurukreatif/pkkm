@@ -2,22 +2,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users — hanya bisa baca/tulis profil sendiri
+    function isAuth() { return request.auth != null; }
+    function role() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isAdmin() { return isAuth() && role() == 'admin'; }
+    function isPengawas() { return isAuth() && role() == 'pengawas'; }
+    function isOperator() { return isAuth() && role() == 'operator'; }
+    function userNpsn() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.npsn; }
+
+    // Users
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-      // Admin bisa baca semua
-      allow read: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if isAuth();
+      allow write: if isAdmin();
+      allow update: if isAuth() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role; // operator tidak bisa ubah role sendiri
     }
 
-    // Penilaian — login required untuk CRUD
+    // Penilaian
     match /penilaian/{docId} {
-      // Semua user login bisa baca
-      allow read: if request.auth != null;
-      // Publik bisa baca (untuk SekolahBuktiPage tanpa login)
+      // Admin & pengawas: baca semua
+      allow read: if isAdmin() || isPengawas();
+      // Operator: hanya baca data yang NPSN-nya cocok
+      allow read: if isOperator() && resource.data.madrasah.npsn == userNpsn();
+      // Publik (tanpa login) untuk halaman bukti sekolah
       allow read: if true;
-      // Hanya user login bisa create/update/delete
-      allow create, update, delete: if request.auth != null;
+      // Create & update: admin dan pengawas
+      allow create, update: if isAdmin() || isPengawas();
+      // Delete: hanya admin
+      allow delete: if isAdmin();
     }
   }
 }
