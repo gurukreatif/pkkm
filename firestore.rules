@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users — hanya bisa baca/tulis profil sendiri
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      // Admin bisa baca semua
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Penilaian — login required untuk CRUD
+    match /penilaian/{docId} {
+      // Semua user login bisa baca
+      allow read: if request.auth != null;
+      // Publik bisa baca (untuk SekolahBuktiPage tanpa login)
+      allow read: if true;
+      // Hanya user login bisa create/update/delete
+      allow create, update, delete: if request.auth != null;
+    }
+  }
+}
